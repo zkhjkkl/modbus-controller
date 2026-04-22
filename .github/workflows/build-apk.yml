@@ -3,13 +3,52 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
+      
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-      - run: cd tablet_app && flutter pub get
-      - run: cd tablet_app && flutter build apk --release --no-tree-shake-icons
+      
+      - name: Debug - List directory structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Contents:"
+          ls -la
+      
+      - name: Check Flutter environment
+        run: |
+          flutter doctor -v
+          flutter --version
+      
+      - name: Initialize Flutter project
+        run: |
+          if [ ! -d "tablet_app" ]; then
+            echo "ERROR: tablet_app directory not found!"
+            ls -la
+            exit 1
+          fi
+          cd tablet_app
+          if [ ! -d "android" ]; then
+            echo "Generating Android platform files..."
+            flutter create --platforms=android .
+          else
+            echo "Android platform files already exist"
+          fi
+      
+      - name: Install dependencies
+        run: |
+          cd tablet_app
+          flutter pub get
+      
+      - name: Build APK
+        run: |
+          cd tablet_app
+          flutter build apk --release --no-tree-shake-icons --verbose
+      
       - uses: actions/upload-artifact@v4
         with:
           name: modbus-controller-apk
