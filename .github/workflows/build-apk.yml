@@ -1,0 +1,16 @@
+name: Build Android APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.13.0'
+      - run: cd tablet_app && flutter pub get
+      - run: cd tablet_app && flutter build apk --release --no-tree-shake-icons
+      - uses: actions/upload-artifact@v3
+        with:
+          name: modbus-controller-apk
+          path: tablet_app/build/app/outputs/apk/release/app-release.apk
