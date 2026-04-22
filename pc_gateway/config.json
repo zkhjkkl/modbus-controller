@@ -1,0 +1,20 @@
+{
+  "modbus": {
+    "mode": "tcp",
+    "host": "192.168.1.100",
+    "port": 502,
+    "slave_id": 1
+  },
+  "mappings": {
+    "start": {
+      "register": 40001,
+      "value": 1,
+      "type": "coil"
+    },
+    "stop": {
+      "register": 40002,
+      "value": 0,
+      "type": "coil"
+    }
+  }
+}
