@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -45,36 +46,63 @@ class AppState with ChangeNotifier {
       return;
     }
 
+    _status = '连接中...';
+    _connected = false;
+    notifyListeners();
+
     try {
+      print('尝试连接: ws://$_serverAddress');
       final uri = Uri.parse('ws://$_serverAddress');
-      _channel = WebSocketChannel.connect(uri);
+
+      // 使用带超时的连接
+      _channel = await WebSocketChannel.connect(uri)
+          .timeout(const Duration(seconds: 5))
+          .catchError((error) {
+        print('连接超时或错误: $error');
+        throw error;
+      });
+
+      print('WebSocket连接建立成功');
 
       _channel!.stream.listen(
         (message) {
+          print('收到消息: $message');
           _handleMessage(message);
         },
         onError: (error) {
-          _status = '连接错误: $error';
+          print('连接错误: $error');
+          _status = '连接错误: ${error.toString()}';
           _connected = false;
           notifyListeners();
         },
         onDone: () {
+          print('连接断开');
           _status = '连接已断开';
           _connected = false;
           notifyListeners();
         },
       );
 
-      _status = '连接中...';
       _connected = true;
-      notifyListeners();
-
-      // 等待连接建立
-      await Future.delayed(const Duration(seconds: 2));
       _status = '已连接';
       notifyListeners();
 
+      // 发送测试消息确认连接
+      await Future.delayed(const Duration(milliseconds: 500));
+      sendCommand('status');
+
+    } on TimeoutException catch (e) {
+      print('连接超时: $e');
+      _status = '连接超时，请检查网络和服务器';
+      _connected = false;
+      notifyListeners();
+    } on SocketException catch (e) {
+      print('网络错误: $e');
+      _status = '网络错误: ${e.message}';
+      _connected = false;
+      notifyListeners();
     } catch (e) {
+      print('连接异常: $e');
       _status = '连接失败: $e';
       _connected = false;
       notifyListeners();

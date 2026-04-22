@@ -15,7 +15,7 @@ from PyQt6.QtCore import QThread, pyqtSignal, Qt
 from PyQt6.QtGui import QFont
 
 from modbus_client import ModbusClient
-from websocket_server import WebSocketServer
+from websocket_server_fixed import WebSocketServerFixed as WebSocketServer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -166,7 +166,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.modbus_client = None
         self.websocket_server = None
-        self.server_thread = None
         self.init_ui()
         self.load_config()
 
@@ -283,21 +282,15 @@ class MainWindow(QMainWindow):
                 modbus_client=self.modbus_client,
                 mappings=self.mapping_widget.get_mappings()
             )
-            self.server_thread = QThread()
-            self.websocket_server.moveToThread(self.server_thread)
-            self.server_thread.started.connect(self.websocket_server.start)
             self.websocket_server.message_received.connect(self.handle_ws_message)
-            self.server_thread.start()
+            self.websocket_server.start()
 
             self.ws_toggle_btn.setText("停止WebSocket服务器")
             self.log_message("WebSocket服务器已启动 (端口: 8765)")
         else:
             # 停止服务器
             self.websocket_server.stop()
-            self.server_thread.quit()
-            self.server_thread.wait()
             self.websocket_server = None
-            self.server_thread = None
 
             self.ws_toggle_btn.setText("启动WebSocket服务器")
             self.log_message("WebSocket服务器已停止")
