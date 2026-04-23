@@ -7,12 +7,12 @@ PC端Modbus网关主程序
 import sys
 import json
 import logging
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QGroupBox, QLabel, QLineEdit,
                              QPushButton, QTextEdit, QTabWidget, QComboBox,
                              QSpinBox, QFormLayout, QMessageBox)
-from PyQt6.QtCore import QThread, pyqtSignal, Qt
-from PyQt6.QtGui import QFont
+from PyQt5.QtCore import QThread, pyqtSignal, Qt
+from PyQt5.QtGui import QFont
 
 from modbus_client import ModbusClient
 from websocket_server_fixed import WebSocketServerFixed as WebSocketServer
@@ -220,7 +220,7 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(main_layout)
 
         # 定时器更新状态
-        from PyQt6.QtCore import QTimer
+        from PyQt5.QtCore import QTimer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_status)
         self.timer.start(1000)

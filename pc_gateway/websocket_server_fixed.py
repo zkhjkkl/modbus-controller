@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 import threading
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal
 import websockets
 
 logger = logging.getLogger(__name__)
