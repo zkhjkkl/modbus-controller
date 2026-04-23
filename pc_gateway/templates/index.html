@@ -103,10 +103,10 @@
         }
         .subtitle span { color: var(--cyan); }
         .settings-top-btn {
-            position: absolute; top: 28px; right: 0;
+            position: absolute; top: 0; right: 0;
             background: var(--bg-card); border: 1px solid var(--border-glow);
             color: var(--text-secondary); border-radius: 8px;
-            padding: 8px 14px; cursor: pointer; font-size: 0.85rem;
+            padding: 6px 14px; cursor: pointer; font-size: 0.82rem;
             backdrop-filter: blur(8px);
             transition: all 0.3s;
         }
@@ -458,8 +458,10 @@
 
 <div class="app">
     <!-- Header -->
-    <header>
+    <div style="position:relative">
         <button id="settings-btn" class="settings-top-btn">⚙ 设置</button>
+    </div>
+    <header>
         <div class="logo">
             <div class="logo-icon">⬡</div>
             <h1>伯朗特机器人控制平台</h1>
