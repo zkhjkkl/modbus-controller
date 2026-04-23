@@ -7,14 +7,16 @@
   },
   "mappings": {
     "start": {
-      "register": 40001,
-      "value": 1,
-      "type": "coil"
+      "type": "holding_register",
+      "register": 2185,
+      "count": 1,
+      "value": 1
     },
     "stop": {
-      "register": 40002,
-      "value": 0,
-      "type": "coil"
+      "type": "holding_register",
+      "register": 2188,
+      "count": 1,
+      "value": 1
     }
   }
 }

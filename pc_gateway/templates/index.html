@@ -332,6 +332,106 @@
                 flex-direction: column;
             }
         }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #7f8c8d;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #3498db;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #7f8c8d;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            color: #3498db;
+        }
+
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -339,92 +439,46 @@
         <header>
             <h1>Modbus无线网关</h1>
             <p class="subtitle">HTTP版 - 通过网页控制Modbus设备</p>
+            <button id="settings-btn" class="button-small" style="position: absolute; top: 30px; right: 30px;">
+                ⚙️ 设置
+            </button>
         </header>
 
         <div class="status-panel">
-            <div class="status-card modbus {% if status.modbus_connected %}connected{% endif %}">
+            <div class="status-card modbus" id="modbus-status-card">
                 <h3>Modbus连接状态</h3>
-                <p>
-                    <span class="status-indicator {% if status.modbus_connected %}status-connected{% else %}status-disconnected{% endif %}"></span>
-                    {% if status.modbus_connected %}
-                        已连接到 {{ status.config.host }}:{{ status.config.port }}
-                    {% else %}
-                        未连接
-                    {% endif %}
+                <p id="modbus-status-text">
+                    <span id="modbus-status-indicator" class="status-indicator status-disconnected"></span>
+                    <span id="modbus-status-detail">未连接</span>
                 </p>
-                <p>模式: {{ status.config.mode|upper }}</p>
-                <p>从站ID: {{ status.config.slave_id }}</p>
+                <p id="modbus-config-info">模式: TCP | 从站ID: 1</p>
             </div>
 
             <div class="status-card">
-                <h3>按钮映射配置</h3>
-                {% if status.mappings.start %}
-                <p>启动: 寄存器 {{ status.mappings.start.register }} = {{ status.mappings.start.value }} ({{ status.mappings.start.type }})</p>
-                {% endif %}
-                {% if status.mappings.stop %}
-                <p>停止: 寄存器 {{ status.mappings.stop.register }} = {{ status.mappings.stop.value }} ({{ status.mappings.stop.type }})</p>
-                {% endif %}
+                <h3>设备控制</h3>
+                <div class="button-grid" style="margin-top: 15px;">
+                    <button id="connect-btn" class="control-button button-connect">
+                        <span>🔗</span> 连接Modbus
+                    </button>
+                    <button id="disconnect-btn" class="control-button button-disconnect" disabled>
+                        <span>🔌</span> 断开连接
+                    </button>
+                </div>
+                <div class="button-grid" style="margin-top: 15px;">
+                    <button id="start-btn" class="control-button button-start" disabled>
+                        <span>▶️</span> 启动设备
+                    </button>
+                    <button id="stop-btn" class="control-button button-stop" disabled>
+                        <span>⏹️</span> 停止设备
+                    </button>
+                </div>
             </div>
 
             <div class="status-card">
                 <h3>访问信息</h3>
                 <p>PC端: <a href="http://localhost:5000">http://localhost:5000</a></p>
                 <p>平板端: <a href="http://{{ request.host }}">http://{{ request.host }}</a></p>
-                <p>API状态: <a href="/api/status">/api/status</a></p>
-            </div>
-        </div>
-
-        <div class="control-panel">
-            <h2>设备控制</h2>
-
-            <div class="button-grid">
-                <button id="connect-btn" class="control-button button-connect">
-                    <span>🔗</span> 连接Modbus
-                </button>
-                <button id="disconnect-btn" class="control-button button-disconnect" disabled>
-                    <span>🔌</span> 断开连接
-                </button>
-                <button id="start-btn" class="control-button button-start" disabled>
-                    <span>▶️</span> 启动设备
-                </button>
-                <button id="stop-btn" class="control-button button-stop" disabled>
-                    <span>⏹️</span> 停止设备
-                </button>
-            </div>
-
-            <div class="manual-control">
-                <h3>手动控制</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="register-address">寄存器地址</label>
-                        <input type="number" id="register-address" placeholder="40001" min="0" max="65535">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-value">值</label>
-                        <input type="text" id="register-value" placeholder="1 或 1,2,3" title="单个值或逗号分隔的多个值">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-type">寄存器类型</label>
-                        <select id="register-type">
-                            <option value="coil">线圈 (Coil) - 读写</option>
-                            <option value="holding_register">保持寄存器 (Holding Register) - 读写</option>
-                            <option value="input_register">输入寄存器 (Input Register) - 只读</option>
-                            <option value="discrete_input">离散输入 (Discrete Input) - 只读</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="slave-id">从站ID (可选)</label>
-                        <input type="number" id="slave-id" placeholder="默认" min="1" max="247">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-count">读取数量</label>
-                        <input type="number" id="register-count" value="1" min="1" max="100" title="读取连续寄存器的数量">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <button id="write-btn" class="button-small" disabled>写入寄存器</button>
-                    <button id="read-btn" class="button-small" disabled>读取寄存器</button>
-                </div>
+                <p>配置文件: config.json</p>
             </div>
         </div>
 
@@ -440,8 +494,97 @@
 
         <footer>
             <p>Modbus无线网关 HTTP版 &copy; 2023 | 使用Flask + pymodbus构建</p>
-            <p>配置文件: config.json | 修改配置后需要重启应用</p>
         </footer>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>系统设置</h2>
+                <button id="close-settings-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="modbus-config">Modbus配置</button>
+                    <button class="tab-btn" data-tab="start-mapping">启动设备映射</button>
+                    <button class="tab-btn" data-tab="stop-mapping">停止设备映射</button>
+                </div>
+
+                <div id="modbus-config" class="tab-content active">
+                    <h3>Modbus TCP配置</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modbus-host">IP地址</label>
+                            <input type="text" id="modbus-host" placeholder="192.168.1.100">
+                        </div>
+                        <div class="form-group">
+                            <label for="modbus-port">端口</label>
+                            <input type="number" id="modbus-port" placeholder="502" min="1" max="65535">
+                        </div>
+                        <div class="form-group">
+                            <label for="modbus-slave-id">从站ID</label>
+                            <input type="number" id="modbus-slave-id" placeholder="1" min="1" max="247">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="start-mapping" class="tab-content">
+                    <h3>启动设备映射配置</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start-register-type">寄存器类型</label>
+                            <select id="start-register-type">
+                                <option value="coil">线圈 (Coil)</option>
+                                <option value="holding_register">保持寄存器 (Holding Register)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="start-register-address">寄存器地址</label>
+                            <input type="number" id="start-register-address" placeholder="40001" min="0" max="65535">
+                        </div>
+                        <div class="form-group">
+                            <label for="start-register-count">寄存器数量</label>
+                            <input type="number" id="start-register-count" value="1" min="1" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="start-register-value">写入的值</label>
+                            <input type="text" id="start-register-value" placeholder="1 或 1,2,3" title="单个值或逗号分隔的多个值">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="stop-mapping" class="tab-content">
+                    <h3>停止设备映射配置</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stop-register-type">寄存器类型</label>
+                            <select id="stop-register-type">
+                                <option value="coil">线圈 (Coil)</option>
+                                <option value="holding_register">保持寄存器 (Holding Register)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="stop-register-address">寄存器地址</label>
+                            <input type="number" id="stop-register-address" placeholder="40002" min="0" max="65535">
+                        </div>
+                        <div class="form-group">
+                            <label for="stop-register-count">寄存器数量</label>
+                            <input type="number" id="stop-register-count" value="1" min="1" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="stop-register-value">写入的值</label>
+                            <input type="text" id="stop-register-value" placeholder="0 或 0,0,0" title="单个值或逗号分隔的多个值">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="save-settings-btn" class="button-small">保存设置</button>
+                    <button id="cancel-settings-btn" class="button-small" style="background-color: #95a5a6;">取消</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="notification" class="notification"></div>
@@ -449,17 +592,40 @@
     <script>
         // 全局状态
         let modbusConnected = {{ 'true' if status.modbus_connected else 'false' }};
-        let logEntries = [];
+        let currentConfig = {{ status.config|tojson|safe }};
+        let currentMappings = {{ status.mappings|tojson|safe }};
 
         // DOM元素
         const connectBtn = document.getElementById('connect-btn');
         const disconnectBtn = document.getElementById('disconnect-btn');
         const startBtn = document.getElementById('start-btn');
         const stopBtn = document.getElementById('stop-btn');
-        const writeBtn = document.getElementById('write-btn');
-        const readBtn = document.getElementById('read-btn');
         const logContainer = document.getElementById('log-container');
         const notification = document.getElementById('notification');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Modbus配置表单元素
+        const modbusHostInput = document.getElementById('modbus-host');
+        const modbusPortInput = document.getElementById('modbus-port');
+        const modbusSlaveIdInput = document.getElementById('modbus-slave-id');
+
+        // 启动映射表单元素
+        const startRegisterTypeInput = document.getElementById('start-register-type');
+        const startRegisterAddressInput = document.getElementById('start-register-address');
+        const startRegisterCountInput = document.getElementById('start-register-count');
+        const startRegisterValueInput = document.getElementById('start-register-value');
+
+        // 停止映射表单元素
+        const stopRegisterTypeInput = document.getElementById('stop-register-type');
+        const stopRegisterAddressInput = document.getElementById('stop-register-address');
+        const stopRegisterCountInput = document.getElementById('stop-register-count');
+        const stopRegisterValueInput = document.getElementById('stop-register-value');
 
         // 更新按钮状态
         function updateButtonStates() {
@@ -467,8 +633,26 @@
             disconnectBtn.disabled = !modbusConnected;
             startBtn.disabled = !modbusConnected;
             stopBtn.disabled = !modbusConnected;
-            writeBtn.disabled = !modbusConnected;
-            readBtn.disabled = !modbusConnected;
+        }
+
+        // 更新状态显示
+        function updateStatusDisplay() {
+            const statusCard = document.getElementById('modbus-status-card');
+            const statusIndicator = document.getElementById('modbus-status-indicator');
+            const statusDetail = document.getElementById('modbus-status-detail');
+            const configInfo = document.getElementById('modbus-config-info');
+
+            if (modbusConnected) {
+                statusCard.classList.add('connected');
+                statusIndicator.className = 'status-indicator status-connected';
+                statusDetail.textContent = `已连接到 ${currentConfig.host}:${currentConfig.port}`;
+                configInfo.textContent = `模式: ${currentConfig.mode.toUpperCase()} | 从站ID: ${currentConfig.slave_id}`;
+            } else {
+                statusCard.classList.remove('connected');
+                statusIndicator.className = 'status-indicator status-disconnected';
+                statusDetail.textContent = '未连接';
+                configInfo.textContent = `模式: ${currentConfig.mode.toUpperCase()} | 从站ID: ${currentConfig.slave_id}`;
+            }
         }
 
         // 显示通知
@@ -534,11 +718,9 @@
 
                 modbusConnected = true;
                 updateButtonStates();
+                updateStatusDisplay();
                 addLog(result.message, 'success');
                 showNotification(result.message, 'success');
-
-                // 更新状态显示
-                setTimeout(updateStatus, 1000);
             } catch (error) {
                 addLog(`连接失败: ${error.message}`, 'error');
                 showNotification(`连接失败: ${error.message}`, 'error');
@@ -553,6 +735,7 @@
 
                 modbusConnected = false;
                 updateButtonStates();
+                updateStatusDisplay();
                 addLog(result.message, 'success');
                 showNotification(result.message, 'success');
             } catch (error) {
@@ -561,12 +744,34 @@
             }
         }
 
-        // 执行命令
+        // 执行命令（启动/停止）
         async function executeCommand(command) {
             try {
                 addLog(`执行${command}命令...`, 'info');
-                const result = await apiCall(`/api/command/${command}`, 'POST');
 
+                // 获取当前映射配置
+                const mapping = currentMappings[command];
+                if (!mapping) {
+                    throw new Error(`未找到${command}命令的映射配置`);
+                }
+
+                // 构建写寄存器请求
+                const data = {
+                    register: mapping.register,
+                    value: mapping.value,
+                    type: mapping.type
+                };
+
+                // 如果值是数组，使用批量写入类型
+                if (Array.isArray(mapping.value)) {
+                    if (mapping.type === 'coil') {
+                        data.type = 'coils';
+                    } else if (mapping.type === 'holding_register') {
+                        data.type = 'holding_registers';
+                    }
+                }
+
+                const result = await apiCall('/api/write', 'POST', data);
                 addLog(result.message, 'success');
                 showNotification(result.message, 'success');
             } catch (error) {
@@ -575,126 +780,7 @@
             }
         }
 
-        // 写入寄存器
-        async function writeRegister() {
-            const register = document.getElementById('register-address').value;
-            const value = document.getElementById('register-value').value;
-            const type = document.getElementById('register-type').value;
-            const slaveId = document.getElementById('slave-id').value || null;
-
-            if (!register || value === '') {
-                showNotification('请输入寄存器地址和值', 'error');
-                return;
-            }
-
-            // 检查是否为只读寄存器类型
-            if (type === 'input_register' || type === 'discrete_input') {
-                showNotification(`错误: ${type}是只读寄存器类型，不能写入`, 'error');
-                return;
-            }
-
-            // 解析值：支持单个值或逗号分隔的多个值
-            let parsedValue;
-            let finalType = type;
-
-            if (value.includes(',')) {
-                // 多个值：逗号分隔
-                parsedValue = value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
-                if (parsedValue.length === 0) {
-                    showNotification('请输入有效的数值', 'error');
-                    return;
-                }
-                // 根据原始类型确定批量写入类型
-                if (type === 'coil') {
-                    finalType = 'coils';
-                } else if (type === 'holding_register') {
-                    finalType = 'holding_registers';
-                }
-                // input_register和discrete_input是只读的，前面已检查
-            } else {
-                // 单个值
-                parsedValue = parseInt(value);
-                if (isNaN(parsedValue)) {
-                    showNotification('请输入有效的数值', 'error');
-                    return;
-                }
-            }
-
-            const data = {
-                register: parseInt(register),
-                value: parsedValue,
-                type: finalType
-            };
-
-            if (slaveId) {
-                data.slave_id = parseInt(slaveId);
-            }
-
-            try {
-                const valueDesc = Array.isArray(parsedValue) ?
-                    `[${parsedValue.join(',')}] (${parsedValue.length}个值)` :
-                    parsedValue;
-                addLog(`写入寄存器: 地址=${register}, 值=${valueDesc}, 类型=${finalType}`, 'info');
-                const result = await apiCall('/api/write', 'POST', data);
-
-                addLog(result.message, 'success');
-                showNotification(result.message, 'success');
-            } catch (error) {
-                addLog(`写入失败: ${error.message}`, 'error');
-                showNotification(`写入失败: ${error.message}`, 'error');
-            }
-        }
-
-        // 读取寄存器
-        async function readRegister() {
-            const register = document.getElementById('register-address').value;
-            const type = document.getElementById('register-type').value;
-            const slaveId = document.getElementById('slave-id').value || null;
-            const count = document.getElementById('register-count').value || 1;
-
-            if (!register) {
-                showNotification('请输入寄存器地址', 'error');
-                return;
-            }
-
-            const data = {
-                register: parseInt(register),
-                type: type,
-                count: parseInt(count)
-            };
-
-            if (slaveId) {
-                data.slave_id = parseInt(slaveId);
-            }
-
-            try {
-                addLog(`读取寄存器: 地址=${register}, 数量=${count}, 类型=${type}`, 'info');
-                const result = await apiCall('/api/read', 'POST', data);
-
-                if (result.status === 'ok') {
-                    const values = result.values;
-                    addLog(`读取成功: 值=${JSON.stringify(values)}`, 'success');
-
-                    if (values.length === 1) {
-                        showNotification(`读取成功: ${values[0]}`, 'success');
-                    } else {
-                        showNotification(`读取成功: ${values.length}个值`, 'success');
-                    }
-
-                    // 将读取的第一个值显示在值输入框中
-                    if (values.length > 0) {
-                        document.getElementById('register-value').value = values[0];
-                    }
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                addLog(`读取失败: ${error.message}`, 'error');
-                showNotification(`读取失败: ${error.message}`, 'error');
-            }
-        }
-
-        // 更新状态
+        // 更新状态（从服务器获取最新状态）
         async function updateStatus() {
             try {
                 const result = await apiCall('/api/status');
@@ -702,9 +788,167 @@
                 if (result.modbus_connected !== modbusConnected) {
                     modbusConnected = result.modbus_connected;
                     updateButtonStates();
+                    updateStatusDisplay();
+                }
+
+                // 更新配置信息
+                if (result.config) {
+                    currentConfig = result.config;
+                }
+                if (result.mappings) {
+                    currentMappings = result.mappings;
                 }
             } catch (error) {
                 console.error('状态更新失败:', error);
+            }
+        }
+
+        // 设置相关函数
+        function openSettings() {
+            loadConfigToForm();
+            settingsModal.style.display = 'block';
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+        }
+
+        function switchTab(event) {
+            const tabId = event.target.getAttribute('data-tab');
+
+            // 更新标签按钮
+            tabBtns.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 更新标签内容
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // 加载配置到表单
+        function loadConfigToForm() {
+            // Modbus配置
+            modbusHostInput.value = currentConfig.host || '192.168.1.100';
+            modbusPortInput.value = currentConfig.port || 502;
+            modbusSlaveIdInput.value = currentConfig.slave_id || 1;
+
+            // 启动映射配置
+            const startMapping = currentMappings.start || {
+                register: 40001,
+                value: 1,
+                type: 'coil'
+            };
+            startRegisterTypeInput.value = startMapping.type || 'coil';
+            startRegisterAddressInput.value = startMapping.register || 40001;
+            startRegisterCountInput.value = startMapping.count || 1;
+            startRegisterValueInput.value = Array.isArray(startMapping.value) ?
+                startMapping.value.join(',') : startMapping.value.toString();
+
+            // 停止映射配置
+            const stopMapping = currentMappings.stop || {
+                register: 40002,
+                value: 0,
+                type: 'coil'
+            };
+            stopRegisterTypeInput.value = stopMapping.type || 'coil';
+            stopRegisterAddressInput.value = stopMapping.register || 40002;
+            stopRegisterCountInput.value = stopMapping.count || 1;
+            stopRegisterValueInput.value = Array.isArray(stopMapping.value) ?
+                stopMapping.value.join(',') : stopMapping.value.toString();
+        }
+
+        // 保存配置
+        async function saveConfig() {
+            try {
+                // 收集表单数据
+                const newConfig = {
+                    mode: 'tcp',
+                    host: modbusHostInput.value.trim(),
+                    port: parseInt(modbusPortInput.value),
+                    slave_id: parseInt(modbusSlaveIdInput.value)
+                };
+
+                // 验证IP地址
+                if (!newConfig.host) {
+                    showNotification('IP地址不能为空', 'error');
+                    return;
+                }
+
+                // 解析启动映射值
+                let startValue = startRegisterValueInput.value.trim();
+                let parsedStartValue;
+                if (startValue.includes(',')) {
+                    parsedStartValue = startValue.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+                    if (parsedStartValue.length === 0) {
+                        showNotification('启动映射值无效', 'error');
+                        return;
+                    }
+                } else {
+                    parsedStartValue = parseInt(startValue);
+                    if (isNaN(parsedStartValue)) {
+                        showNotification('启动映射值无效', 'error');
+                        return;
+                    }
+                }
+
+                // 解析停止映射值
+                let stopValue = stopRegisterValueInput.value.trim();
+                let parsedStopValue;
+                if (stopValue.includes(',')) {
+                    parsedStopValue = stopValue.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+                    if (parsedStopValue.length === 0) {
+                        showNotification('停止映射值无效', 'error');
+                        return;
+                    }
+                } else {
+                    parsedStopValue = parseInt(stopValue);
+                    if (isNaN(parsedStopValue)) {
+                        showNotification('停止映射值无效', 'error');
+                        return;
+                    }
+                }
+
+                const newMappings = {
+                    start: {
+                        type: startRegisterTypeInput.value,
+                        register: parseInt(startRegisterAddressInput.value),
+                        count: parseInt(startRegisterCountInput.value),
+                        value: parsedStartValue
+                    },
+                    stop: {
+                        type: stopRegisterTypeInput.value,
+                        register: parseInt(stopRegisterAddressInput.value),
+                        count: parseInt(stopRegisterCountInput.value),
+                        value: parsedStopValue
+                    }
+                };
+
+                // 发送到服务器
+                const data = {
+                    config: newConfig,
+                    mappings: newMappings
+                };
+
+                addLog('正在保存配置...', 'info');
+                const result = await apiCall('/api/config', 'POST', data);
+
+                // 更新本地配置
+                currentConfig = newConfig;
+                currentMappings = newMappings;
+
+                // 更新状态显示
+                updateStatusDisplay();
+
+                addLog(result.message, 'success');
+                showNotification(result.message, 'success');
+                closeSettings();
+            } catch (error) {
+                addLog(`保存配置失败: ${error.message}`, 'error');
+                showNotification(`保存配置失败: ${error.message}`, 'error');
             }
         }
 
@@ -713,11 +957,26 @@
         disconnectBtn.addEventListener('click', disconnectModbus);
         startBtn.addEventListener('click', () => executeCommand('start'));
         stopBtn.addEventListener('click', () => executeCommand('stop'));
-        writeBtn.addEventListener('click', writeRegister);
-        readBtn.addEventListener('click', readRegister);
+        settingsBtn.addEventListener('click', openSettings);
+        closeSettingsBtn.addEventListener('click', closeSettings);
+        cancelSettingsBtn.addEventListener('click', closeSettings);
+        saveSettingsBtn.addEventListener('click', saveConfig);
+
+        // 标签页切换
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', switchTab);
+        });
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', (event) => {
+            if (event.target === settingsModal) {
+                closeSettings();
+            }
+        });
 
         // 初始化
         updateButtonStates();
+        updateStatusDisplay();
         addLog('页面加载完成', 'info');
 
         // 定期更新状态

@@ -300,6 +300,65 @@ def test_connection():
             'results': test_results
         }), 500
 
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    """获取当前配置"""
+    return jsonify({
+        'status': 'ok',
+        'config': config,
+        'mappings': mappings
+    })
+
+@app.route('/api/config', methods=['POST'])
+def save_config():
+    """保存配置"""
+    global config, mappings, modbus_client
+
+    data = request.json
+    if not data:
+        return jsonify({'status': 'error', 'message': '请求数据为空'}), 400
+
+    try:
+        # 更新配置
+        new_config = data.get('config', {})
+        new_mappings = data.get('mappings', {})
+
+        # 验证必要字段
+        if not new_config.get('host') or not new_config.get('port'):
+            return jsonify({'status': 'error', 'message': 'IP地址和端口不能为空'}), 400
+
+        # 更新全局变量
+        config.update(new_config)
+        mappings.update(new_mappings)
+
+        # 确保配置完整
+        config.setdefault('mode', 'tcp')
+        config.setdefault('slave_id', 1)
+
+        # 保存到文件
+        config_data = {
+            'modbus': config,
+            'mappings': mappings
+        }
+
+        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config_data, f, indent=2)
+
+        logger.info(f"配置已保存: {config}")
+
+        # 如果Modbus已连接，重新连接
+        if modbus_client and modbus_client.is_connected():
+            modbus_client.disconnect()
+            modbus_client = None
+            logger.info("已断开旧连接，需要重新连接")
+
+        return jsonify({'status': 'ok', 'message': '配置保存成功'})
+
+    except Exception as e:
+        logger.error(f"保存配置失败: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     """提供静态文件"""
