@@ -8,6 +8,7 @@ import json
 import logging
 import sys
 import os
+import socket
 from flask import Flask, render_template, request, jsonify, send_from_directory
 
 # 添加当前目录到Python路径，确保可以导入modbus_client
@@ -32,6 +33,28 @@ app = Flask(__name__)
 modbus_client = None
 config = None
 mappings = None
+
+def get_local_ip():
+    """获取本机局域网IP地址"""
+    try:
+        # 创建一个UDP套接字连接到外部地址来获取本地IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # 连接到公共DNS服务器，但不发送数据
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        try:
+            # 备选方法：获取主机名对应的IP
+            hostname = socket.gethostname()
+            ip = socket.gethostbyname(hostname)
+            if ip.startswith("127."):
+                # 如果是回环地址，返回localhost
+                return "127.0.0.1"
+            return ip
+        except Exception:
+            return "127.0.0.1"
 
 def load_config():
     """加载配置文件"""
@@ -379,9 +402,23 @@ def init_app():
 if __name__ == '__main__':
     # 初始化应用
     if init_app():
+        # 获取本机IP地址
+        local_ip = get_local_ip()
+
         logger.info("Modbus HTTP网关启动中...")
         logger.info("请访问 http://localhost:5000 使用控制界面")
-        logger.info("平板端可访问 http://<PC_IP>:5000")
+        logger.info(f"平板端可访问 http://{local_ip}:5000")
+
+        # 打印显眼的连接提示
+        print("\n" + "="*60)
+        print(" "*20 + "移动设备连接提示")
+        print("="*60)
+        print("请使用手机或平板浏览器访问以下地址：")
+        print("")
+        print(f"    http://{local_ip}:5000")
+        print("")
+        print("确保手机/平板与电脑在同一局域网内")
+        print("="*60 + "\n")
 
         # 启动Flask开发服务器
         # 注意: 生产环境应使用生产服务器如gunicorn
