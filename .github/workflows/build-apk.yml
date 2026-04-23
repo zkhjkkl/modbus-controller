@@ -32,9 +32,30 @@ jobs:
             exit 1
           fi
           cd tablet_app
+
+          # 确保Flutter项目完整
+          echo "Ensuring Flutter project is complete..."
+
+          # 创建缺失的必需文件
+          if [ ! -f "analysis_options.yaml" ]; then
+            echo "Creating analysis_options.yaml..."
+            echo "include: package:flutter_lints/flutter.yaml" > analysis_options.yaml
+          fi
+
+          if [ ! -f ".gitignore" ]; then
+            echo "Creating .gitignore..."
+            echo -e "# Flutter/Dart/Pub related\n**/doc/api/\n.dart_tool/\n.flutter-plugins\n.flutter-plugins-dependencies\n.packages\n.pub-cache/\n.pub/\nbuild/\n\n# Android related\n**/android/**/gradle-wrapper.jar\n**/android/.gradle\n**/android/captures/\n**/android/gradlew\n**/android/gradlew.bat\n**/android/local.properties\n**/android/**/GeneratedPluginRegistrant.java" > .gitignore
+          fi
+
+          if [ ! -d "test" ]; then
+            echo "Creating test directory..."
+            mkdir -p test
+          fi
+
+          # 生成Android平台文件（如果缺失）
           if [ ! -d "android" ]; then
             echo "Generating Android platform files..."
-            flutter create --platforms=android .
+            flutter create --platforms=android --no-overwrite .
           else
             echo "Android platform files already exist"
           fi
