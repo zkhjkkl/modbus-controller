@@ -31,7 +31,7 @@ class QRCodeWindow:
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Modbus无线网关")
+        self.root.title("机器人无线网关")
         self.root.geometry("520x680")
         self.root.resizable(False, False)
         self.root.configure(bg="white")
@@ -63,7 +63,7 @@ class QRCodeWindow:
         # ── 标题 ──
         title_font = tkfont.Font(size=22, weight="bold")
         tk.Label(
-            self.root, text="Modbus 无线网关",
+            self.root, text="伯朗特移动端控制平台",
             font=title_font, bg="white", fg="#2c3e50"
         ).pack(pady=(30, 5))
 

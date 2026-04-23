@@ -170,7 +170,7 @@ class MainWindow(QMainWindow):
         self.load_config()
 
     def init_ui(self):
-        self.setWindowTitle("Modbus无线网关 v1.0")
+        self.setWindowTitle("机器人无线网关 v1.0")
         self.setGeometry(100, 100, 800, 600)
 
         central_widget = QWidget()
