@@ -77,7 +77,68 @@ project/
 └── docs/               # 文档
 ```
 
-## 快速开始
+## 方案2：HTTP + 网页界面（最简单）
+
+### 概述
+此方案使用Flask提供网页界面，平板通过浏览器访问，无需安装任何应用：
+```
+平板浏览器 → HTTP请求 → Flask服务器 (PC端) → Modbus设备
+```
+
+### 优点
+- **零平板端部署**：任何有浏览器的设备都可使用
+- **跨平台**：支持Android, iOS, Windows, Linux, Mac
+- **开发最快**：无需开发平板应用，只需网页界面
+
+### PC端安装 (HTTP网关)
+```bash
+cd pc_gateway
+pip install -r requirements-http.txt
+python app.py
+```
+或使用启动脚本：
+- Windows: `run_http_gateway.bat`
+- Linux/Mac: `./run_http_gateway.sh`
+
+### 平板端使用
+1. 确保平板和PC在同一网络
+2. 在平板浏览器中访问：`http://<PC_IP地址>:5000`
+3. 使用网页上的按钮控制设备
+
+### 配置文件
+修改 `pc_gateway/config.json` 配置Modbus连接和按钮映射：
+```json
+{
+  "modbus": {
+    "mode": "tcp",
+    "host": "192.168.1.100",
+    "port": 502,
+    "slave_id": 1
+  },
+  "mappings": {
+    "start": {
+      "register": 40001,
+      "value": 1,
+      "type": "coil"
+    },
+    "stop": {
+      "register": 40002,
+      "value": 0,
+      "type": "coil"
+    }
+  }
+}
+```
+
+### 网页功能
+- Modbus连接状态显示
+- 启动/停止按钮控制
+- 手动寄存器读写
+- 实时操作日志
+- 响应式设计，适配平板屏幕
+
+## 方案1：WebSocket + Flutter应用（原方案）
+
 ### PC端安装
 ```bash
 cd pc_gateway
