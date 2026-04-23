@@ -6,9 +6,9 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v4
         with:
           flutter-version: '3.22.0'
       
@@ -49,7 +49,7 @@ jobs:
           cd tablet_app
           flutter build apk --release --no-tree-shake-icons --verbose
       
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: modbus-controller-apk
           path: tablet_app/build/app/outputs/apk/release/app-release.apk
