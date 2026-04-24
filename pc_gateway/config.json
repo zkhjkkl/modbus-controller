@@ -1,20 +1,20 @@
 {
   "modbus": {
     "mode": "tcp",
-    "host": "10.0.1.205",
-    "port": 502,
+    "host": "192.168.3.4",
+    "port": 9760,
     "slave_id": 1
   },
   "mappings": {
     "start": {
       "type": "holding_register",
-      "register": 2185,
+      "register": 20003,
       "count": 1,
       "value": 1
     },
     "stop": {
       "type": "holding_register",
-      "register": 2188,
+      "register": 20001,
       "count": 1,
       "value": 1
     }
